@@ -14,7 +14,8 @@ public class PlacementSystem : MonoBehaviour
     private int width = 20;
     private int height = 20;
     private int lenght = 20;
-    private List<Vector3Int> candidats = new List<Vector3Int>();
+    private List<Vector3Int> candidatsNew = new List<Vector3Int>();
+    private List<Vector3Int> candidatsUp = new List<Vector3Int>();
     public Vector3 Control;
     public GameObject selector, voxIndicator;
     public Vector3 offset;
@@ -29,7 +30,7 @@ public class PlacementSystem : MonoBehaviour
         for (int x = 0; x < width; x++) {
             for(int z = 0; z < lenght; z++)
             {
-                candidats.Add(new Vector3Int(x, 0, z));
+                candidatsNew.Add(new Vector3Int(x, 0, z));
             }
         }
 
@@ -69,18 +70,43 @@ public class PlacementSystem : MonoBehaviour
         Vector3 spawnPosition = grid.CellToWorld(gridPosition) + offset;
         Instantiate(voxIndicator, spawnPosition, Quaternion.identity);
         worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] = BlockType.city;
-        candidats.Add(new Vector3Int(gridPosition.x, gridPosition.y, gridPosition.z));
+        
     }
 
     private void WorldUpdate()
     {
-        int randIndex = Random.Range(0, candidats.Count);
-        Vector3Int elected = candidats[randIndex];
+        if (candidatsNew.Count > 0)
+        {
+            NewBuilding(Random.Range(0, candidatsNew.Count));
+        }
 
-        if (worldGrid[elected.x, elected.y+1, elected.z] == BlockType.empty)
+        if (candidatsUp.Count > 0)
+        {
+            GrowBuilding(Random.Range(0, candidatsUp.Count));
+        }
+
+    }
+
+
+    private void NewBuilding(int spawnIndex)
+    {
+        Vector3Int elected = candidatsNew[spawnIndex];
+        if (worldGrid[elected.x, elected.y + 1, elected.z] == BlockType.empty)
         {
             AddBloc(new Vector3Int(elected.x, elected.y + 1, elected.z));
-            candidats.RemoveAt(randIndex);
+            candidatsNew.RemoveAt(spawnIndex);
+            candidatsUp.Add(new Vector3Int(elected.x, elected.y+1, elected.z));
+        }
+    }
+
+    private void GrowBuilding(int spawnIndex)
+    {
+        Vector3Int elected = candidatsUp[spawnIndex];
+        if (worldGrid[elected.x, elected.y + 1, elected.z] == BlockType.empty)
+        {
+            AddBloc(new Vector3Int(elected.x, elected.y + 1, elected.z));
+            candidatsUp.RemoveAt(spawnIndex);
+            candidatsUp.Add(new Vector3Int(elected.x, elected.y + 1, elected.z));
         }
     }
 }
