@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteAlways]
 public class PlacementSystem : MonoBehaviour
 {
 
@@ -11,19 +10,34 @@ public class PlacementSystem : MonoBehaviour
         empty,
         city
     }
-    public BlockType[,,] worldGrid = new BlockType[100, 100, 100];
+    public BlockType[,,] worldGrid = new BlockType[20, 20, 20];
+    private int width = 20;
+    private int height = 20;
+    private int lenght = 20;
+    private List<Vector3Int> candidats = new List<Vector3Int>();
     public Vector3 Control;
     public GameObject selector, voxIndicator;
     public Vector3 offset;
     public Grid grid;
+    public float tic = 0.5f;
 
     private void Start()
     {
-        for (int x = 0; x < 10; x++)
-        {
-            for (int y = 0; y < 10; y++)
+       
+       
+            InvokeRepeating("WorldUpdate", 0f, tic);
+        for (int x = 0; x < width; x++) {
+            for(int z = 0; z < lenght; z++)
             {
-                for (int z = 0; z < 10; z++)
+                candidats.Add(new Vector3Int(x, 0, z));
+            }
+        }
+
+            for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                for (int z = 0; z < lenght; z++)
                 {
                     worldGrid[x, y, z] = BlockType.empty;
                 }
@@ -45,14 +59,28 @@ public class PlacementSystem : MonoBehaviour
 
             if (worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] == BlockType.empty)
             {
-                worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] = BlockType.city;
-                AddBloc(grid.CellToWorld(gridPosition) + offset);
+                AddBloc(gridPosition);
             }
         }
     }
 
-    private void AddBloc(Vector3 spawnPosition)
+    private void AddBloc(Vector3Int gridPosition)
     {
+        Vector3 spawnPosition = grid.CellToWorld(gridPosition) + offset;
         Instantiate(voxIndicator, spawnPosition, Quaternion.identity);
+        worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] = BlockType.city;
+        candidats.Add(new Vector3Int(gridPosition.x, gridPosition.y, gridPosition.z));
+    }
+
+    private void WorldUpdate()
+    {
+        int randIndex = Random.Range(0, candidats.Count);
+        Vector3Int elected = candidats[randIndex];
+
+        if (worldGrid[elected.x, elected.y+1, elected.z] == BlockType.empty)
+        {
+            AddBloc(new Vector3Int(elected.x, elected.y + 1, elected.z));
+            candidats.RemoveAt(randIndex);
+        }
     }
 }
