@@ -54,6 +54,9 @@ public class PlacementSystem : MonoBehaviour
     public float goSidesStrenght = 10f;
     [Range(0.0f, 100.0f)]
     public float goDownStrenght = 5f;
+    public float goUpLuck;
+    public float goSidesLuck;
+    public float goDownLuck;
 
     private void Start()
     {
@@ -84,6 +87,10 @@ public class PlacementSystem : MonoBehaviour
 
     private void Update()
     {
+        goUpLuck = goUpStrenght / (goUpStrenght + goSidesStrenght + goDownStrenght) * 100f;
+        //goUpLuck = 45f;
+        goSidesLuck = goSidesStrenght / (goUpStrenght + goSidesStrenght + goDownStrenght) * 100f;
+        goDownLuck = goDownStrenght / (goUpStrenght + goSidesStrenght + goDownStrenght) * 100f;
         Vector3 selectorPosition = selector.transform.position;
         Vector3Int gridPosition = grid.WorldToCell(selectorPosition);
         Control = new Vector3(gridPosition.x, gridPosition.y, gridPosition.z);
@@ -113,19 +120,39 @@ public class PlacementSystem : MonoBehaviour
 
     private void WorldUpdate()
     {
-        /*if (candidatsNew.Count > 0 && NumberOfBuildings >0)
-        {
-            NewBuilding(Random.Range(0, candidatsNew.Count));
-            NumberOfBuildings--;
-        }*/
 
-        /*
-        if (growSubscribers.Count > 0)
-        {
-            GrowBuilding(Random.Range(0, growSubscribers.Count));
-        }*/
+        CandidatDirection randomDirection = CandidatDirection.CTop;
+        float dice = Random.Range(1f, 100f);
 
-        Grow(CandidatDirection.CLeft);
+        if (dice <= goUpLuck)
+        {
+            randomDirection = CandidatDirection.CTop;
+        }else if (dice <= goUpLuck + goSidesLuck)
+        {
+            int diceFour = Random.Range(0, 4);
+            switch (diceFour)
+            {
+                case 0:
+                    randomDirection = CandidatDirection.CRight;
+                    break;
+                case 1:
+                    randomDirection = CandidatDirection.CLeft;
+                    break;
+                case 2:
+                    randomDirection = CandidatDirection.CBack;
+                    break;
+                case 3:
+                    randomDirection = CandidatDirection.CForth;
+                    break;
+            }
+        }
+        else
+        {
+            randomDirection = CandidatDirection.CDown;
+        }
+        
+
+        Grow(randomDirection);
 
     }
 
@@ -137,40 +164,6 @@ public class PlacementSystem : MonoBehaviour
         {
             AddBlock(new Vector3Int(elected.x, elected.y, elected.z));
             candidatsNew.RemoveAt(spawnIndex);
-        }
-    }
-
-    /*
-    public void GrowTop(int subscriberIndex)
-    {
-        GameObject GOsubscriber = growTopSubscribers[subscriberIndex];
-        Vector3Int elected = GOsubscriber.GetComponent<CubeScript>().positionOnGrid;
-        if (worldGrid[elected.x, elected.y + 1, elected.z] == BlockType.empty)
-        {
-            AddBlock(new Vector3Int(elected.x, elected.y + 1, elected.z));
-            UnsubscribeToGrowTop(GOsubscriber);
-        }
-    }*/
-
-    public void GrowBuilding(int subscriberIndex)
-    {
-        GameObject GOsubscriber = growSubscribers[subscriberIndex];
-        Vector3Int elected = GOsubscriber.GetComponent<CubeScript>().ElectCandidate();
-        
-        AddBlock(new Vector3Int(elected.x, elected.y, elected.z));
-    }
-
-    public void GrowUp()
-    {
-        Candidat[] filteredCandidats = candidats.Where(c => c.topAvailable).ToArray();
-
-        if (filteredCandidats.Count() > 0)
-        {
-            int randomIndex = Random.Range(0, filteredCandidats.Count());
-
-            Candidat electedCandidat = filteredCandidats[randomIndex];
-
-            AddBlock(electedCandidat.goCandidat.GetComponent<CubeScript>().positionOnGrid + new Vector3Int(0, 1, 0));
         }
     }
 
