@@ -27,6 +27,11 @@ public class PlacementSystem : MonoBehaviour
         empty,
         city
     }
+    public enum CandidatDirection
+    {
+        CRight,CLeft,CTop,CDown,CBack,CForth
+    }
+
     public BlockType[,,] worldGrid = new BlockType[20, 20, 20];
     public int width = 20;
     public int height = 20;
@@ -120,7 +125,7 @@ public class PlacementSystem : MonoBehaviour
             GrowBuilding(Random.Range(0, growSubscribers.Count));
         }*/
 
-        GrowUp();
+        Grow(CandidatDirection.CLeft);
 
     }
 
@@ -166,6 +171,52 @@ public class PlacementSystem : MonoBehaviour
             Candidat electedCandidat = filteredCandidats[randomIndex];
 
             AddBlock(electedCandidat.goCandidat.GetComponent<CubeScript>().positionOnGrid + new Vector3Int(0, 1, 0));
+        }
+    }
+
+    public void Grow(CandidatDirection candidatDirection)
+    {
+        Candidat[] filteredCandidats = null;
+        Vector3Int deltaToSpawn = new Vector3Int(0,0,0);
+
+        switch (candidatDirection)
+        {
+            case CandidatDirection.CRight:
+                filteredCandidats = candidats.Where(c => c.rightAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(1,0,0);
+                break;
+            case CandidatDirection.CLeft:
+                filteredCandidats = candidats.Where(c => c.leftAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(-1,0,0);
+                break;
+            case CandidatDirection.CTop:
+                filteredCandidats = candidats.Where(c => c.topAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(0,1,0);
+                break;
+            case CandidatDirection.CDown:
+                filteredCandidats = candidats.Where(c => c.downAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(0,-1,0);
+                break;
+            case CandidatDirection.CBack:
+                filteredCandidats = candidats.Where(c => c.backAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(0,0,1);
+                break;
+            case CandidatDirection.CForth:
+                filteredCandidats = candidats.Where(c => c.forthAvailable).ToArray();
+                deltaToSpawn = new Vector3Int(0,0,-1);
+                break;
+            default:
+                break;
+        }
+        
+
+        if (filteredCandidats.Count() > 0)
+        {
+            int randomIndex = Random.Range(0, filteredCandidats.Count());
+
+            Candidat electedCandidat = filteredCandidats[randomIndex];
+
+            AddBlock(electedCandidat.goCandidat.GetComponent<CubeScript>().positionOnGrid + deltaToSpawn);
         }
     }
 
