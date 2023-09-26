@@ -51,12 +51,12 @@ public class CubeScript : MonoBehaviour
     void Start()
     {
         placementSystem.countTest++;
-        neighbors[0] = new Neighbors("Right",false, positionOnGrid + new Vector3Int(1,0,0), 10);
-        neighbors[1] = new Neighbors("Left", false, positionOnGrid + new Vector3Int(-1, 0, 0), 10);
-        neighbors[2] = new Neighbors("Top", false, positionOnGrid + new Vector3Int(0, 1, 0), 50);
-        neighbors[3] = new Neighbors("Down", false, positionOnGrid + new Vector3Int(0, -1, 0), 0);
-        neighbors[4] = new Neighbors("Back", false, positionOnGrid + new Vector3Int(0, 0, 1), 10);
-        neighbors[5] = new Neighbors("Forth", false, positionOnGrid + new Vector3Int(0, 0, -1), 10);
+        neighbors[0] = new Neighbors("Right",false, positionOnGrid + new Vector3Int(1,0,0), placementSystem.goSidesStrenght);
+        neighbors[1] = new Neighbors("Left", false, positionOnGrid + new Vector3Int(-1, 0, 0), placementSystem.goSidesStrenght);
+        neighbors[2] = new Neighbors("Top", false, positionOnGrid + new Vector3Int(0, 1, 0), placementSystem.goUpStrenght);
+        neighbors[3] = new Neighbors("Down", false, positionOnGrid + new Vector3Int(0, -1, 0), placementSystem.goDownStrenght);
+        neighbors[4] = new Neighbors("Back", false, positionOnGrid + new Vector3Int(0, 0, 1), placementSystem.goSidesStrenght);
+        neighbors[5] = new Neighbors("Forth", false, positionOnGrid + new Vector3Int(0, 0, -1), placementSystem.goSidesStrenght);
         for (int i = 0; i < 6; i++)
         {
             if(neighbors[i].gridCoordinates.x<0 ||
@@ -123,6 +123,8 @@ public class CubeScript : MonoBehaviour
 
     public Vector3Int ElectCandidate()
     {
+        Debug.Log("Elect Candidate for cube" + positionOnGrid+"\n");
+
         float[] dice = new float[6];
         float maxNumber = 0f;
         int choosenNeighbors = 0;
@@ -133,6 +135,8 @@ public class CubeScript : MonoBehaviour
             if(neighbors[i].availability)
             {
                 dice[i] = Random.Range(1f, neighbors[i].luckStrenght);
+                Debug.Log("Dice " + i+" ("+ neighbors[i].directionName+"): "+ dice[i]+" (Max "+ neighbors[i].luckStrenght+")");
+
 
                 if (dice[i] > maxNumber)
                 {

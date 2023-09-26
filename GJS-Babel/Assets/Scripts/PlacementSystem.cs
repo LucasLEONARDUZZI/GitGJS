@@ -1,6 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+
+public class Candidat
+{
+    public GameObject goCandidat;
+    public bool rightAvailable;
+    public bool leftAvailable;
+    public bool topAvailable;
+    public bool downAvailable;
+    public bool backAvailable;
+    public bool forthAvailable;
+
+    public Candidat(GameObject goCandidat)
+    {
+        this.goCandidat = goCandidat;
+    }
+}
 
 public class PlacementSystem : MonoBehaviour
 {
@@ -17,6 +34,7 @@ public class PlacementSystem : MonoBehaviour
     private List<Vector3Int> candidatsNew = new List<Vector3Int>();
     //private List<GameObject> growTopSubscribers = new List<GameObject>();
     private List<GameObject> growSubscribers = new List<GameObject>();
+    private List<Candidat> candidats = new List<Candidat>();
     public Vector3 Control;
     public GameObject selector, voxIndicator;
     public Vector3 offset;
@@ -24,6 +42,13 @@ public class PlacementSystem : MonoBehaviour
     public float tic = 0.5f;
     public int countTest = 0;
     public int NumberOfBuildings = 10;
+
+    [Range(0.0f, 100.0f)]
+    public float goUpStrenght = 20f;
+    [Range(0.0f, 100.0f)] 
+    public float goSidesStrenght = 10f;
+    [Range(0.0f, 100.0f)]
+    public float goDownStrenght = 5f;
 
     private void Start()
     {
@@ -89,10 +114,13 @@ public class PlacementSystem : MonoBehaviour
             NumberOfBuildings--;
         }*/
 
+        /*
         if (growSubscribers.Count > 0)
         {
             GrowBuilding(Random.Range(0, growSubscribers.Count));
-        }
+        }*/
+
+        GrowUp();
 
     }
 
@@ -127,16 +155,59 @@ public class PlacementSystem : MonoBehaviour
         AddBlock(new Vector3Int(elected.x, elected.y, elected.z));
     }
 
+    public void GrowUp()
+    {
+        Candidat[] filteredCandidats = candidats.Where(c => c.topAvailable).ToArray();
+
+        if (filteredCandidats.Count() > 0)
+        {
+            int randomIndex = Random.Range(0, filteredCandidats.Count());
+
+            Candidat electedCandidat = filteredCandidats[randomIndex];
+
+            AddBlock(electedCandidat.goCandidat.GetComponent<CubeScript>().positionOnGrid + new Vector3Int(0, 1, 0));
+        }
+    }
+
+
     public void SubscribeToGrow(GameObject subscriber)
     {
         if (!growSubscribers.Contains(subscriber))
         {
             growSubscribers.Add(subscriber);
         }
+
+        Candidat newCandidat = new Candidat(subscriber);
+
+        if (!candidats.Contains(newCandidat))
+        {
+            candidats.Add(newCandidat);
+        }
+
+        Candidat candidatToUpdate = candidats.Find(c => c.goCandidat == subscriber);
+        CubeScript subscriberScript = subscriber.GetComponent<CubeScript>();
+
+        if (candidatToUpdate != null)
+        {
+            candidatToUpdate.rightAvailable = subscriberScript.neighbors[0].availability;
+            candidatToUpdate.leftAvailable = subscriberScript.neighbors[1].availability;
+            candidatToUpdate.topAvailable = subscriberScript.neighbors[2].availability;
+            candidatToUpdate.downAvailable = subscriberScript.neighbors[3].availability;
+            candidatToUpdate.backAvailable = subscriberScript.neighbors[4].availability;
+            candidatToUpdate.forthAvailable = subscriberScript.neighbors[5].availability;
+        }
+
     }
 
     public void UnsubscribeToGrow(GameObject subscriber)
     {
         growSubscribers.Remove(subscriber);
+
+        Candidat candidatToRemove = candidats.Find(c => c.goCandidat == subscriber);
+
+        if(candidatToRemove != null)
+        {
+            candidats.Remove(candidatToRemove);
+        }
     }
 }
