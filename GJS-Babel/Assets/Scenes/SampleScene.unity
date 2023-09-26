@@ -519,12 +519,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fc33857a145243b9b3800c37201bf7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  width: 20
+  height: 20
+  lenght: 20
   Control: {x: -1, y: 0, z: 0}
   selector: {fileID: 1083727425}
   voxIndicator: {fileID: 4661004150467332284, guid: 972c61539568e4ecaa476a5802b090f9, type: 3}
   offset: {x: 0.5, y: 0.25, z: 0.5}
   grid: {fileID: 1805612443}
   tic: 0.1
+  countTest: 0
+  NumberOfBuildings: 10
 --- !u!4 &2127581661
 Transform:
   m_ObjectHideFlags: 0

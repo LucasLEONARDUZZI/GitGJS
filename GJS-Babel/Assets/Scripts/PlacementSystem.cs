@@ -11,22 +11,23 @@ public class PlacementSystem : MonoBehaviour
         city
     }
     public BlockType[,,] worldGrid = new BlockType[20, 20, 20];
-    private int width = 20;
-    private int height = 20;
-    private int lenght = 20;
+    public int width = 20;
+    public int height = 20;
+    public int lenght = 20;
     private List<Vector3Int> candidatsNew = new List<Vector3Int>();
-    private List<Vector3Int> candidatsUp = new List<Vector3Int>();
+    //private List<GameObject> growTopSubscribers = new List<GameObject>();
+    private List<GameObject> growSubscribers = new List<GameObject>();
     public Vector3 Control;
     public GameObject selector, voxIndicator;
     public Vector3 offset;
     public Grid grid;
     public float tic = 0.5f;
+    public int countTest = 0;
+    public int NumberOfBuildings = 10;
 
     private void Start()
     {
-       
-       
-            InvokeRepeating("WorldUpdate", 0f, tic);
+        InvokeRepeating("WorldUpdate", 0f, tic);
         for (int x = 0; x < width; x++) {
             for(int z = 0; z < lenght; z++)
             {
@@ -44,6 +45,11 @@ public class PlacementSystem : MonoBehaviour
                 }
             }
         }
+
+        for (int i = 0; i < NumberOfBuildings; i++)
+        {
+            NewBuilding(Random.Range(0, candidatsNew.Count));
+        }
     }
 
     private void Update()
@@ -60,29 +66,32 @@ public class PlacementSystem : MonoBehaviour
 
             if (worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] == BlockType.empty)
             {
-                AddBloc(gridPosition);
+                AddBlock(gridPosition);
             }
         }
     }
 
-    private void AddBloc(Vector3Int gridPosition)
+    private void AddBlock(Vector3Int gridPosition)
     {
         Vector3 spawnPosition = grid.CellToWorld(gridPosition) + offset;
-        Instantiate(voxIndicator, spawnPosition, Quaternion.identity);
+        GameObject newBlock = Instantiate(voxIndicator, spawnPosition, Quaternion.identity);
+        newBlock.GetComponent<CubeScript>().placementSystem = this;
+        newBlock.GetComponent<CubeScript>().positionOnGrid = gridPosition;
         worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] = BlockType.city;
         
     }
 
     private void WorldUpdate()
     {
-        if (candidatsNew.Count > 0)
+        /*if (candidatsNew.Count > 0 && NumberOfBuildings >0)
         {
             NewBuilding(Random.Range(0, candidatsNew.Count));
-        }
+            NumberOfBuildings--;
+        }*/
 
-        if (candidatsUp.Count > 0)
+        if (growSubscribers.Count > 0)
         {
-            GrowBuilding(Random.Range(0, candidatsUp.Count));
+            GrowBuilding(Random.Range(0, growSubscribers.Count));
         }
 
     }
@@ -91,22 +100,43 @@ public class PlacementSystem : MonoBehaviour
     private void NewBuilding(int spawnIndex)
     {
         Vector3Int elected = candidatsNew[spawnIndex];
-        if (worldGrid[elected.x, elected.y + 1, elected.z] == BlockType.empty)
+        if (worldGrid[elected.x, elected.y, elected.z] == BlockType.empty)
         {
-            AddBloc(new Vector3Int(elected.x, elected.y + 1, elected.z));
+            AddBlock(new Vector3Int(elected.x, elected.y, elected.z));
             candidatsNew.RemoveAt(spawnIndex);
-            candidatsUp.Add(new Vector3Int(elected.x, elected.y+1, elected.z));
         }
     }
 
-    private void GrowBuilding(int spawnIndex)
+    /*
+    public void GrowTop(int subscriberIndex)
     {
-        Vector3Int elected = candidatsUp[spawnIndex];
+        GameObject GOsubscriber = growTopSubscribers[subscriberIndex];
+        Vector3Int elected = GOsubscriber.GetComponent<CubeScript>().positionOnGrid;
         if (worldGrid[elected.x, elected.y + 1, elected.z] == BlockType.empty)
         {
-            AddBloc(new Vector3Int(elected.x, elected.y + 1, elected.z));
-            candidatsUp.RemoveAt(spawnIndex);
-            candidatsUp.Add(new Vector3Int(elected.x, elected.y + 1, elected.z));
+            AddBlock(new Vector3Int(elected.x, elected.y + 1, elected.z));
+            UnsubscribeToGrowTop(GOsubscriber);
         }
+    }*/
+
+    public void GrowBuilding(int subscriberIndex)
+    {
+        GameObject GOsubscriber = growSubscribers[subscriberIndex];
+        Vector3Int elected = GOsubscriber.GetComponent<CubeScript>().ElectCandidate();
+        
+        AddBlock(new Vector3Int(elected.x, elected.y, elected.z));
+    }
+
+    public void SubscribeToGrow(GameObject subscriber)
+    {
+        if (!growSubscribers.Contains(subscriber))
+        {
+            growSubscribers.Add(subscriber);
+        }
+    }
+
+    public void UnsubscribeToGrow(GameObject subscriber)
+    {
+        growSubscribers.Remove(subscriber);
     }
 }
