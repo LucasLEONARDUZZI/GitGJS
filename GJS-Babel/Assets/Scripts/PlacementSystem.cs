@@ -37,14 +37,11 @@ public class PlacementSystem : MonoBehaviour
     public int height = 20;
     public int lenght = 20;
     private List<Vector3Int> candidatsNew = new List<Vector3Int>();
-    //private List<GameObject> growTopSubscribers = new List<GameObject>();
-    private List<GameObject> growSubscribers = new List<GameObject>();
     private List<Candidat> candidats = new List<Candidat>();
-    public Vector3 Control;
-    public GameObject selector, voxIndicator;
+    public GameObject cityBlock;
     public Vector3 offset;
     public Grid grid;
-    public float tic = 0.5f;
+    private float tic = 0.5f;
     public int countTest = 0;
     public int NumberOfBuildings = 10;
 
@@ -60,7 +57,7 @@ public class PlacementSystem : MonoBehaviour
 
     private void Start()
     {
-        InvokeRepeating("WorldUpdate", 0f, tic);
+        InvokeRepeating("WorldUpdate", tic, tic);
         for (int x = 0; x < width; x++) {
             for(int z = 0; z < lenght; z++)
             {
@@ -91,27 +88,12 @@ public class PlacementSystem : MonoBehaviour
         //goUpLuck = 45f;
         goSidesLuck = goSidesStrenght / (goUpStrenght + goSidesStrenght + goDownStrenght) * 100f;
         goDownLuck = goDownStrenght / (goUpStrenght + goSidesStrenght + goDownStrenght) * 100f;
-        Vector3 selectorPosition = selector.transform.position;
-        Vector3Int gridPosition = grid.WorldToCell(selectorPosition);
-        Control = new Vector3(gridPosition.x, gridPosition.y, gridPosition.z);
-        voxIndicator.transform.position = grid.CellToWorld(gridPosition)+offset;
-
-        if (gridPosition.x >= 0 && gridPosition.x < worldGrid.GetLength(0) &&
-            gridPosition.y >= 0 && gridPosition.y < worldGrid.GetLength(1) &&
-            gridPosition.z >= 0 && gridPosition.z < worldGrid.GetLength(2))
-        {
-
-            if (worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] == BlockType.empty)
-            {
-                AddBlock(gridPosition);
-            }
-        }
     }
 
     private void AddBlock(Vector3Int gridPosition)
     {
         Vector3 spawnPosition = grid.CellToWorld(gridPosition) + offset;
-        GameObject newBlock = Instantiate(voxIndicator, spawnPosition, Quaternion.identity);
+        GameObject newBlock = Instantiate(cityBlock, spawnPosition, Quaternion.identity,gameObject.transform);
         newBlock.GetComponent<CubeScript>().placementSystem = this;
         newBlock.GetComponent<CubeScript>().positionOnGrid = gridPosition;
         worldGrid[gridPosition.x, gridPosition.y, gridPosition.z] = BlockType.city;
@@ -120,6 +102,12 @@ public class PlacementSystem : MonoBehaviour
 
     private void WorldUpdate()
     {
+        Debug.Log("tic avant: " + tic);
+        tic = Random.Range(0.1f, 10f);
+        //tic = 10f;
+        CancelInvoke("WorldUpdate");
+        InvokeRepeating("WorldUpdate", tic, tic);
+        Debug.Log("tic apres: " + tic);
 
         CandidatDirection randomDirection = CandidatDirection.CTop;
         float dice = Random.Range(1f, 100f);
@@ -216,11 +204,6 @@ public class PlacementSystem : MonoBehaviour
 
     public void SubscribeToGrow(GameObject subscriber)
     {
-        if (!growSubscribers.Contains(subscriber))
-        {
-            growSubscribers.Add(subscriber);
-        }
-
         Candidat newCandidat = new Candidat(subscriber);
 
         if (!candidats.Contains(newCandidat))
@@ -245,8 +228,6 @@ public class PlacementSystem : MonoBehaviour
 
     public void UnsubscribeToGrow(GameObject subscriber)
     {
-        growSubscribers.Remove(subscriber);
-
         Candidat candidatToRemove = candidats.Find(c => c.goCandidat == subscriber);
 
         if(candidatToRemove != null)

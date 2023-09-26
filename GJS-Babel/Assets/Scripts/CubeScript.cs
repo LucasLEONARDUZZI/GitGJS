@@ -121,34 +121,6 @@ public class CubeScript : MonoBehaviour
         }
     }
 
-    public Vector3Int ElectCandidate()
-    {
-        Debug.Log("Elect Candidate for cube" + positionOnGrid+"\n");
-
-        float[] dice = new float[6];
-        float maxNumber = 0f;
-        int choosenNeighbors = 0;
-
-
-        for (int i = 0; i < 6; i++)
-        {
-            if(neighbors[i].availability)
-            {
-                dice[i] = Random.Range(1f, neighbors[i].luckStrenght);
-                Debug.Log("Dice " + i+" ("+ neighbors[i].directionName+"): "+ dice[i]+" (Max "+ neighbors[i].luckStrenght+")");
-
-
-                if (dice[i] > maxNumber)
-                {
-                    maxNumber = dice[i];
-                    choosenNeighbors = i;
-                }
-            }
-        }
-        Debug.Log("new cube added on "+ neighbors[choosenNeighbors].directionName);
-        return neighbors[choosenNeighbors].gridCoordinates;
-    }
-
     private void AddBlock(Vector3Int gridPosition)
     {
         Vector3 spawnPosition = placementSystem.grid.CellToWorld(gridPosition) + placementSystem.offset;
